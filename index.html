@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>lChat</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <!--<script src="assets/vue.js"></script>-->
+    <script>var Vue = require("vue")</script>
+</head>
+<body>
+    <div id="app" class="main-container">
+        <console :nickname="status.nickname" :address="status.address" :status="status.status" :error="status.error"></console>
+        <message-list :messages="messages"></message-list>
+        <text-input></text-input>
+    </div>
+
+    <!-- begin templates -->
+    <!-- console template -->
+    <script id="console" type="text/template">
+    <div class="console-div">
+        <input type="text" v-model="nickname" placeholder="Your nickname">
+        <input type="text" v-model="address" placeholder="The peer address">
+        <button @click="connect()">Connect</button>
+        <button @click="disconnect()">Disconnect</button>
+        <span class="status-{{status}}"></span>
+        <span class="console-msg {{(!error.has_error || error.level)}}-msg">{{error.msg}}</span>
+    </div>
+    </script>
+    <!--message-item template-->
+    <script id="message-item" type="text/template">
+    <div class="message clearfix">
+        <div class="sender">{{sender}}</div>
+        <div class="msg-box">{{{text}}}</div>
+    </div>
+    </script>
+    <!--message-list template-->
+    <script id="message-list" type="text/template">
+    <div class="message-list-div">
+        <message-item v-for="msg in messages" :sender="msg.sender" :text="msg.text"></message-item>
+    </div>
+    </script>
+    <!--text-input template-->
+    <script id="text-input" type="text/template">
+    <div class="text-input-div clearfix">
+        <textarea id="text-input-textarea" @keydown="keydown" type="text" v-model="text"></textarea>
+        <button @click="send()">Send</button>
+    </div>
+    </script>
+
+    <!--begin program logic-->
+    <script src="assets/easing.js"></script>
+    <script>
+        "use strict";
+
+
+        function getTemplate(id) {
+            return document.getElementById(id).innerText
+        }
+
+        /* components */
+        //console
+        Vue.component("console", {
+            template: getTemplate("console"),
+            props: ["nickname", "address", "status", "error"],
+            methods: {
+                connect: function() {
+                    // if(client && client.connected){
+                    //     vue.status.status = "on";
+                    //     displaySystemMsg({level: "info", msg: "already connected"});
+                    //     return;
+                    // }
+
+                    // address should not be empty
+                    if(!(this.address && this.address.trim())) {
+                        return;
+                    }
+
+                    setupClient(this.address)
+                    client.connect(this.nickname).then(function(msg) {
+                        vue.status.status = "on";
+                        displaySystemMsg({level: "info", msg: "connected"});
+                    }, function(err){
+                        displaySystemMsg({level: "warn", msg: err.msg});
+                    })
+                },
+                disconnect: function() {
+                    if(!client || !client.connected){
+                        vue.status.status = "off";
+                        displaySystemMsg({level: "info", msg: "already disconnected"});
+                    } else {
+                        client.disconnect()
+                        /*.then(function(msg) {
+                            vue.status.status = "off";
+                            displaySystemMsg({level: "info", msg: "disconnected"});
+                        }, function(err) {
+                            if(err) {
+                                displaySystemMsg({level: "error", msg: "failed to disconnect"});
+                            }
+                        }) will be handled in ondisconnected event handler */
+                    }
+                 }
+            }
+        })
+
+        Vue.component("messageItem", {
+            props: ["sender", "text"],
+            template: getTemplate("message-item"),
+        })
+
+        Vue.component("messageList", {
+            props: ["messages"],
+            template: getTemplate("message-list")
+        })
+
+        Vue.component("textInput", {
+            template: getTemplate("text-input"),
+            data: () => ({text: ""}),
+            methods: {
+                send: function() {
+                    client.send(this.text).then(() => this.text = "", function(err) {
+                        displaySystemMsg(err);
+                    })
+                },
+                keydown: function(evt) {
+                    if(evt.ctrlKey && evt.keyCode === 13) {
+                        this.send()
+                    }
+                }
+            }
+        })
+
+        var vue = new Vue({
+            el: "#app",
+            data: {
+                status: {
+                    nickname: "",
+                    address: "",
+                    error: {
+                        has_error: false,
+                        msg: "error message"
+                    },
+                    status: "off"
+                },
+                messages: [
+                    // {
+                    //     sender: "liuyhOoQ",
+                    //     text: "Hello from liuyhOoQ."
+                    // }, {
+                    //     sender: "sqlite author",
+                    //     text: ["May you do good and not evil.",
+                    //         "May you find forgiveness for yourself and forgive others.",
+                    //         "May you share freely, never taking more than you give."].join("<br>")
+                    // }, {
+                    //     sender: "Oscar Wilder",
+                    //     text: "The only way to get rid of a temptation is to yield to it. Resist it, and your soul grows sick with longing for the things it has forbidden to itself, with desire for what its monstrous laws have made monstrous and unlawful."
+                    // }, {
+                    //     sender: "nobody",
+                    //     text: "Hello, I'm nobody."
+                    // }
+                ]
+            }
+        });
+
+        var displaySystemMsg = (function() {
+            var timeout = void 0;
+                return function displaySystemMsg(msg) {
+                    vue.status.error.has_error = true;
+                    vue.status.error.level = msg.level;
+                    vue.status.error.msg = msg.msg;
+
+                    if(timeout !== void 0) clearTimeout(timeout);
+                    timeout = setTimeout(function() { vue.status.error.has_error = false }, 1000);
+                }
+        })();
+
+        var {Client} = require("./lib/client.js")
+        var client = void 0;
+        // client.connect()
+        // client.disconnect()
+        // client.send()
+        function setupClient(addr) {
+            if(client) {
+                client.isConnected && client.disconnect();
+            }
+            client = Client.create(addr);
+
+            client.onmsg(function(msg) {
+                vue.messages.push(msg)
+            });
+            client.ondisconnected(function(err) {
+                vue.status.status = "off";
+                if(err) {
+                    if(err)
+                    displaySystemMsg(err);
+                } else {
+                    displaySystemMsg({level: "error", msg: "disconnected"})
+                }
+            });
+        }
+
+        // auto scroll
+        ;( function () {
+            var msgList = document.querySelector(".message-list-div")
+            var timeout = void 0;
+            var interval = void 0;
+            var curr_easing = void 0;
+
+            function scroll() {
+                if(curr_easing === void 0) {
+                    clearInterval(interval);
+                }else{
+                    var next = curr_easing.next();
+                    if(next.done) {
+                        clearInterval(interval);
+                    }else{
+                        // what we really want to do
+                        msgList.scrollTop = next.value;
+                    }
+                }
+            }
+
+            msgList.addEventListener("DOMNodeInserted", function(evt) {
+                if(timeout !== void 0) clearTimeout(timeout); 
+                timeout = setTimeout(function() {
+                    var newScrollTop = msgList.scrollHeight - msgList.clientHeight
+                    curr_easing = easing(msgList.scrollTop, newScrollTop);
+                    interval = setInterval(scroll, 500 / 100);
+                    timeout = void 0;
+                }, 100);
+            })
+        })();
+    </script>
+</body>
+</html>

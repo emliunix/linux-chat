@@ -1,0 +1,153 @@
+@charset "utf-8";
+
+html, body, div {
+    padding: 0; margin: 0;
+}
+
+html {
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    min-width: 800px;
+    min-height: 500px;
+}
+
+body {
+    height: 100%;
+}
+
+input, textarea {
+    box-sizing: border-box;
+    border: none;
+    padding: 3px;
+}
+
+input[type=text] {
+    height: 20px;
+    line-height: 14px;
+}
+
+button {
+    box-sizing: border-box;
+    border: none;
+    background: #CCC;
+    height: 20px;
+}
+
+.clearfix::after {
+    content: ',';
+    display: block;
+    visibility: hidden;
+    height: 0;
+    clear: both;
+}
+
+.main-container {
+    height: 100%;
+    background-color: #EEE;
+    overflow: hidden;
+}
+
+.console-div {
+    padding: 10px;
+    height: 20px;
+    line-height: 20px;
+}
+
+/* console */
+
+.console-div .status-on, .console-div .status-off {
+    display: inline-block;
+    width: 0; height: 0;
+    border: 5px solid #32b16c;
+    border-radius: 5px;
+}
+.console-div .status-on {
+    border-color: #32b16c;
+}
+
+.console-div .status-off {
+    border-color: #C33;
+}
+
+.console-msg {
+    transition: opacity ease-in-out .5s, color ease-in-out .5s;
+    opacity: 0;
+}
+
+.warn-msg { color: #CC0; opacity: 1; }
+.error-msg { color: #C33; opacity: 1; }
+.info-msg { color: #32b16c; opacity: 1; }
+
+/* message */
+
+.message-list-div {
+    padding-left: 10px;
+    height: calc(100% - 200px); /* main-container - console-div - text-input-div*/ 
+    overflow-y: scroll;
+    overflow-x: hidden;
+    background: white;
+}
+
+.message {
+    margin-top: 2em;
+}
+
+.message > div {
+    float: left;
+}
+
+.message > .sender {
+    max-width: 20rem;
+    color: #04A;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.message > .msg-box {
+    position: relative;
+    max-width: 30rem;
+    margin-left: 2rem;
+    padding: 1rem;
+    border-radius: 10px;
+    background-color: #0BE;
+
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.9);
+    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.5);
+}
+
+.msg-box::before {
+    content: ",";
+    display: block;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    border: solid #0BE;
+    border-width: 5px 9px;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+    position: absolute;
+    top: 12px;
+    left: -18px;
+}
+
+.text-input-div {
+    height: 140px;
+    padding: 10px;
+    vertical-align: text-bottom;
+}
+
+.text-input-div > * {
+    display: block;
+    float: left;
+    height: 100%;
+}
+
+.text-input-div > textarea {
+    width: calc(100% - 60px);
+    resize: none;
+}
+
+.text-input-div > button {
+    width: 60px;
+}

@@ -1,0 +1,23 @@
+{
+  "name": "lchat",
+  "version": "1.0.0",
+  "description": "Chat program",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "server": "node lib/server.js",
+    "client": "electron index.js",
+    "package": "electron-packager . --platform=win32,linux --arch=x64"
+  },
+  "author": "Liu Yuhui <emliunix@hotmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "electron-prebuilt": "^1.2.1",
+    "vue": "^1.0.24"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "electron-packager": "^7.0.3",
+    "mocha": "^2.5.3"
+  }
+}
